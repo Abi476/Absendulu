@@ -18,9 +18,14 @@ class DatabaseService {
 
     return await openDatabase(
       join(dbPath, 'epresensi.db'),
-      version: 1, // Versi tetap 1 jika kita uninstall aplikasi lamanya
+      version: 1,
+      // --- FUNGSI MENGAKTIFKAN CASCADE DELETE ---
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
+      
       onCreate: (db, version) async {
-        // --- PENAMBAHAN KOLOM image_path PADA TABEL USERS ---
+        // TABEL USERS
         await db.execute('''
           CREATE TABLE users(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,16 +35,31 @@ class DatabaseService {
             image_path TEXT 
           )
         ''');
-        // ----------------------------------------------------
         
+        // TABEL SCHEDULES 
+        await db.execute('''
+          CREATE TABLE schedules(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            nama_matkul TEXT,
+            jam_masuk TEXT,
+            jam_pulang TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+          )
+        ''');
+
+        // TABEL ATTENDANCE
         await db.execute('''
           CREATE TABLE attendance(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
+            schedule_id INTEGER, 
             check_in_time TEXT,
+            check_out_time TEXT, 
             latitude REAL,
             longitude REAL,
-            address TEXT
+            address TEXT,
+            FOREIGN KEY (schedule_id) REFERENCES schedules (id) ON DELETE CASCADE
           )
         ''');
       },
