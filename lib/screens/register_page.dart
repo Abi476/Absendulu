@@ -20,9 +20,12 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscurePassword = true;
 
   Future register() async {
-    if (nameController.text.trim().isEmpty ||
-        emailController.text.trim().isEmpty ||
-        passwordController.text.trim().isEmpty) {
+    String name = nameController.text.trim();
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
+
+    // --- VALIDASI KOLOM KOSONG ---
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Harap isi semua kolom dengan benar!"),
@@ -32,15 +35,62 @@ class _RegisterPageState extends State<RegisterPage> {
       return; 
     }
 
+    // --- VALIDASI PANJANG NAMA ---
+    if (name.length < 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Nama lengkap minimal harus 3 karakter!"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // --- VALIDASI FORMAT EMAIL STANDAR ---
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Format email tidak valid! (Contoh: nama@email.com)"),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    // --- VALIDASI PANJANG PASSWORD ---
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Password terlalu pendek, minimal 6 karakter!"),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       loading = true;
     });
 
-    bool success = await AuthService.register(
-      nameController.text.trim(),
-      emailController.text.trim(),
-      passwordController.text.trim(),
-    );
+    // --- CEK APAKAH EMAIL SUDAH TERDAFTAR SEBELUM MENYIMPAN ---
+    bool emailExists = await AuthService.checkEmailExists(email);
+    if (emailExists) {
+      setState(() {
+        loading = false;
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Email ini sudah terdaftar, silakan gunakan email lain!"),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    // Eksekusi simpan ke database jika semua validasi lolos
+    bool success = await AuthService.register(name, email, password);
 
     setState(() {
       loading = false;
@@ -59,7 +109,7 @@ class _RegisterPageState extends State<RegisterPage> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Email sudah dipakai atau terjadi kesalahan"),
+          content: Text("Terjadi kesalahan sistem, gagal mendaftar."),
           backgroundColor: Colors.redAccent, 
         ),
       );
