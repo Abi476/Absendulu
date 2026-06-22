@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Tambahkan ini untuk SystemNavigator
+import 'package:flutter/services.dart'; 
 
 import '../services/auth_service.dart';
 import 'register_page.dart';
@@ -20,6 +20,9 @@ class _LoginPageState extends State<LoginPage> {
   final newPasswordController = TextEditingController();
 
   bool loading = false;
+  
+  // Variabel untuk toggle password di form login
+  bool _obscurePassword = true;
 
   Future login() async {
     if (emailController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
@@ -75,6 +78,9 @@ class _LoginPageState extends State<LoginPage> {
   void showForgotPasswordSheet() {
     forgotEmailController.clear();
     newPasswordController.clear();
+    
+    // Variabel lokal untuk Bottom Sheet
+    bool obscureNewPassword = true;
 
     showModalBottomSheet(
       context: context,
@@ -82,124 +88,140 @@ class _LoginPageState extends State<LoginPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          top: 24,
-          left: 24,
-          right: 24,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24, 
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Text(
-                'Reset Password',
-                style: TextStyle(
-                  fontSize: 22, 
-                  fontWeight: FontWeight.bold, 
-                  color: Theme.of(context).primaryColor
-                ),
-              ),
+      // Gunakan StatefulBuilder agar state di dalam Bottom Sheet bisa diupdate
+      builder: (context) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              top: 24,
+              left: 24,
+              right: 24,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24, 
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'Masukkan email Anda yang terdaftar dan buat kata sandi baru.',
-              style: TextStyle(color: Colors.black54, fontSize: 14),
-            ),
-            const SizedBox(height: 20),
-            
-            TextField(
-              controller: forgotEmailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                labelText: 'Email Terdaftar',
-                prefixIcon: const Icon(Icons.email_outlined),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            TextField(
-              controller: newPasswordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Password Baru',
-                prefixIcon: const Icon(Icons.lock_reset),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            const SizedBox(height: 24),
-            
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Text(
+                    'Reset Password',
+                    style: TextStyle(
+                      fontSize: 22, 
+                      fontWeight: FontWeight.bold, 
+                      color: Theme.of(context).primaryColor
+                    ),
                   ),
                 ),
-                onPressed: () async {
-                  String email = forgotEmailController.text.trim();
-                  String newPass = newPasswordController.text.trim();
-
-                  if (email.isEmpty || newPass.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Email dan Password baru wajib diisi!"),
-                        backgroundColor: Colors.orange,
-                      ),
-                    );
-                    return;
-                  }
-
-                  bool emailExist = await AuthService.checkEmailExists(email);
-                  
-                  if (!context.mounted) return;
-
-                  if (emailExist) {
-                    await AuthService.resetPassword(email, newPass);
-                    Navigator.pop(context); 
-                    
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Password berhasil diperbarui. Silakan login."),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  } else {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Maaf, email tersebut belum terdaftar."),
-                        backgroundColor: Colors.redAccent,
-                      ),
-                    );
-                  }
-                },
-                child: const Text(
-                  'Perbarui Password',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                const SizedBox(height: 12),
+                const Text(
+                  'Masukkan email Anda yang terdaftar dan buat kata sandi baru.',
+                  style: TextStyle(color: Colors.black54, fontSize: 14),
                 ),
-              ),
+                const SizedBox(height: 20),
+                
+                TextField(
+                  controller: forgotEmailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    labelText: 'Email Terdaftar',
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // Form Password Baru (Lupa Password) dengan Ikon Mata
+                TextField(
+                  controller: newPasswordController,
+                  obscureText: obscureNewPassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password Baru',
+                    prefixIcon: const Icon(Icons.lock_reset),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscureNewPassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        // Menggunakan setModalState khusus untuk Bottom Sheet
+                        setModalState(() {
+                          obscureNewPassword = !obscureNewPassword;
+                        });
+                      },
+                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () async {
+                      String email = forgotEmailController.text.trim();
+                      String newPass = newPasswordController.text.trim();
+
+                      if (email.isEmpty || newPass.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Email dan Password baru wajib diisi!"),
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                        return;
+                      }
+
+                      bool emailExist = await AuthService.checkEmailExists(email);
+                      
+                      if (!context.mounted) return;
+
+                      if (emailExist) {
+                        await AuthService.resetPassword(email, newPass);
+                        Navigator.pop(context); 
+                        
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Password berhasil diperbarui. Silakan login."),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      } else {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Maaf, email tersebut belum terdaftar."),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text(
+                      'Perbarui Password',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        }
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // --- PENAMBAHAN POPSCOPE UNTUK KONFIRMASI KELUAR ---
     return PopScope(
-      canPop: false, // Mencegah aksi back bawaan HP
+      canPop: false, 
       onPopInvoked: (bool didPop) async {
         if (didPop) return;
 
-        // Tampilkan dialog konfirmasi
         final bool shouldExit = await showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -225,12 +247,11 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ) ?? false;
 
-        // Jika user memilih 'Ya', paksa aplikasi untuk tertutup
         if (shouldExit) {
           SystemNavigator.pop();
         }
       },
-      // --------------------------------------------------
+      
       child: Scaffold(
         backgroundColor: Colors.grey[50], 
         body: SafeArea(
@@ -248,9 +269,9 @@ class _LoginPageState extends State<LoginPage> {
                     fit: BoxFit.contain, 
                   ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 0),
                   const Text(
-                    "Selamat Datang!",
+                    "Selamat Datang, di Absendulu!",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 28,
@@ -285,13 +306,25 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 16),
 
+                  // Form Password (Login Utama) dengan Ikon Mata
                   TextField(
                     controller: passwordController,
-                    obscureText: true,
+                    obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: "Password",
                       hintText: "Masukkan password Anda",
                       prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

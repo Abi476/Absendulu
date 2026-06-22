@@ -15,21 +15,22 @@ class _RegisterPageState extends State<RegisterPage> {
   final passwordController = TextEditingController();
 
   bool loading = false;
+  
+  // Variabel untuk toggle password di form registrasi
+  bool _obscurePassword = true;
 
   Future register() async {
-    // --- PENAMBAHAN .trim() AGAR KEBAL DARI INPUT SPASI KOSONG ---
     if (nameController.text.trim().isEmpty ||
         emailController.text.trim().isEmpty ||
         passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Harap isi semua kolom dengan benar!"),
-          backgroundColor: Colors.orange, // Warna oranye untuk peringatan
+          backgroundColor: Colors.orange, 
         ),
       );
-      return; // Hentikan fungsi agar tidak lanjut memanggil AuthService
+      return; 
     }
-    // -------------------------------------------------------------
 
     setState(() {
       loading = true;
@@ -51,7 +52,7 @@ class _RegisterPageState extends State<RegisterPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Register berhasil. Silakan login."),
-          backgroundColor: Colors.green, // Warna hijau untuk sukses
+          backgroundColor: Colors.green, 
         ),
       );
       Navigator.pop(context);
@@ -59,7 +60,7 @@ class _RegisterPageState extends State<RegisterPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Email sudah dipakai atau terjadi kesalahan"),
-          backgroundColor: Colors.redAccent, // Warna merah untuk gagal
+          backgroundColor: Colors.redAccent, 
         ),
       );
     }
@@ -68,14 +69,13 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50], // Sesuai dengan warna Login Page
+      backgroundColor: Colors.grey[50], 
       appBar: AppBar(
-        backgroundColor:
-            Colors.transparent, // Membuat AppBar menyatu dengan background
+        backgroundColor: Colors.transparent, 
         elevation: 0,
         iconTheme: const IconThemeData(
           color: Colors.black87,
-        ), // Warna tombol back
+        ), 
       ),
       body: SafeArea(
         child: Center(
@@ -88,7 +88,6 @@ class _RegisterPageState extends State<RegisterPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Ikon Header
                 Icon(
                   Icons.person_add_alt_1_rounded,
                   size: 80,
@@ -112,7 +111,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 40),
 
-                // Form Nama
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
@@ -128,7 +126,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Form Email
                 TextField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -145,14 +142,25 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Form Password
+                // Form Password (Registrasi) dengan Ikon Mata
                 TextField(
                   controller: passwordController,
-                  obscureText: true,
+                  obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: "Password",
                     hintText: "Buat password Anda",
                     prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -162,7 +170,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 30),
 
-                // Tombol Register
                 SizedBox(
                   height: 50,
                   child: ElevatedButton(
