@@ -1,0 +1,38 @@
+name: sistem_absensi
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_map: ^8.3.0
+  geocoding: ^4.0.0
+  geolocator: ^14.0.3
+  latlong2: ^0.9.1
+  path: ^1.9.1
+  shared_preferences: ^2.5.5
+  sqflite: ^2.4.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_native_splash: ^2.4.8
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo.png
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/logo.png
+  android: true
+  ios: true
+  android_12:
+    image: assets/logo.png
+    color: "#FFFFFF"
