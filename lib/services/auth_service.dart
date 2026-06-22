@@ -195,4 +195,29 @@ class AuthService {
     return false;
   }
 
+  //forgot
+  static Future<bool> checkEmailExists(String email) async {
+    final db = await DatabaseService.database;
+    final result = await db.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+    return result.isNotEmpty;
+  }
+
+  static Future<bool> resetPassword(String email, String newPassword) async {
+    final db = await DatabaseService.database;
+    try {
+      await db.update(
+        'users',
+        {'password': newPassword},
+        where: 'email = ?',
+        whereArgs: [email],
+      );
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 }
