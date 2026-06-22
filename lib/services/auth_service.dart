@@ -5,30 +5,34 @@ import 'location_service.dart';
 
 class AuthService {
 
+  // --- Menerima parameter tambahan 'imagePath' ---
   static Future<bool> updateUser(
     String name,
-    String password,
-  ) async {
+    String password, {
+    String? imagePath, 
+  }) async {
 
-    final db =
-        await DatabaseService.database;
-
-    final pref =
-        await SharedPreferences.getInstance();
-
-    int? userId =
-        pref.getInt('user_id');
+    final db = await DatabaseService.database;
+    final pref = await SharedPreferences.getInstance();
+    int? userId = pref.getInt('user_id');
 
     if (userId == null) return false;
 
     try {
+      // Siapkan Map data yang akan diupdate
+      Map<String, dynamic> dataToUpdate = {
+        'name': name,
+        'password': password,
+      };
+
+      // Jika ada gambar yang dipilih, masukkan ke dalam data update
+      if (imagePath != null) {
+        dataToUpdate['image_path'] = imagePath;
+      }
 
       await db.update(
         'users',
-        {
-          'name': name,
-          'password': password,
-        },
+        dataToUpdate,
         where: 'id = ?',
         whereArgs: [userId],
       );
@@ -36,23 +40,14 @@ class AuthService {
       return true;
 
     } catch (e) {
-
       return false;
-
     }
-
   }
 
   static Future<Map<String, dynamic>?> getUser() async {
-
-    final db =
-        await DatabaseService.database;
-
-    final pref =
-        await SharedPreferences.getInstance();
-
-    int? userId =
-        pref.getInt('user_id');
+    final db = await DatabaseService.database;
+    final pref = await SharedPreferences.getInstance();
+    int? userId = pref.getInt('user_id');
 
     if (userId == null) return null;
 
@@ -68,19 +63,12 @@ class AuthService {
     }
 
     return null;
-
-}
+  }
 
   static Future<List<Map<String, dynamic>>> getAttendance() async {
-
-    final db =
-        await DatabaseService.database;
-
-    final pref =
-        await SharedPreferences.getInstance();
-
-    int? userId =
-        pref.getInt('user_id');
+    final db = await DatabaseService.database;
+    final pref = await SharedPreferences.getInstance();
+    int? userId = pref.getInt('user_id');
 
     if (userId == null) return [];
 
@@ -92,33 +80,23 @@ class AuthService {
     );
 
     return result;
-
   }
 
   static Future<bool> checkIn() async {
-
-    final db =
-        await DatabaseService.database;
-
-    final pref =
-        await SharedPreferences.getInstance();
-
-    int? userId =
-        pref.getInt('user_id');
+    final db = await DatabaseService.database;
+    final pref = await SharedPreferences.getInstance();
+    int? userId = pref.getInt('user_id');
 
     if (userId == null) return false;
 
     try {
-
-      final position =
-          await LocationService.getLocation();
+      final position = await LocationService.getLocation();
 
       await db.insert(
         'attendance',
         {
           'user_id': userId,
-          'check_in_time':
-              DateTime.now().toString(),
+          'check_in_time': DateTime.now().toString(),
           'latitude': position.latitude,
           'longitude': position.longitude,
           'address': 'Unknown'
@@ -128,11 +106,8 @@ class AuthService {
       return true;
 
     } catch (e) {
-
       return false;
-
     }
-
   }
 
   static Future<bool> register(
@@ -140,11 +115,9 @@ class AuthService {
     String email,
     String password,
   ) async {
-
     final db = await DatabaseService.database;
 
     try {
-
       await db.insert(
         'users',
         {
@@ -157,9 +130,7 @@ class AuthService {
       return true;
 
     } catch (e) {
-
       return false;
-
     }
   }
 
@@ -167,7 +138,6 @@ class AuthService {
     String email,
     String password,
   ) async {
-
     final db = await DatabaseService.database;
 
     final result = await db.query(
@@ -180,9 +150,7 @@ class AuthService {
     );
 
     if (result.isNotEmpty) {
-
-      final pref =
-          await SharedPreferences.getInstance();
+      final pref = await SharedPreferences.getInstance();
 
       await pref.setInt(
         'user_id',
@@ -195,7 +163,6 @@ class AuthService {
     return false;
   }
 
-  //forgot
   static Future<bool> checkEmailExists(String email) async {
     final db = await DatabaseService.database;
     final result = await db.query(

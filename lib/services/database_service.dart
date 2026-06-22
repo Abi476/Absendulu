@@ -18,16 +18,20 @@ class DatabaseService {
 
     return await openDatabase(
       join(dbPath, 'epresensi.db'),
-      version: 1,
+      version: 1, // Versi tetap 1 jika kita uninstall aplikasi lamanya
       onCreate: (db, version) async {
+        // --- PENAMBAHAN KOLOM image_path PADA TABEL USERS ---
         await db.execute('''
           CREATE TABLE users(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             email TEXT UNIQUE,
-            password TEXT
+            password TEXT,
+            image_path TEXT 
           )
         ''');
+        // ----------------------------------------------------
+        
         await db.execute('''
           CREATE TABLE attendance(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
